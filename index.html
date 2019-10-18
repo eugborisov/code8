@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <table>
+      <thead>
+        <th>Ticket ID</th>
+        <th>Subject</th>
+        <th>Description</th>
+        <th>Custom Field</th>
+        <th>Requester</th>
+      </thead>
+      <tbody>
+
+      </tbody>
+    </table>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js">
+    </script>
+    <script type="text/javascript">
+
+      $.ajax({
+        url: 'https://d3v-ontec.zendesk.com/api/v2/tickets.json',
+        type: 'GET',
+        headers: {
+          "Authorization": "Bearer 10758ffcfa48cfc5abae073ee78fd838684e8d82067d122516bcce6835940000"
+        },
+        async: true,
+        complete: function (data) {
+
+          let tickets = data.responseJSON.tickets;
+
+          for (var i = 0; i < tickets.length && tickets[i].status != 'solved' && tickets[i].status != 'closed'; i++) {
+
+            let customfields = tickets[i].custom_fields;
+            let cf;
+
+            for (var y = 0; y < customfields.length; y++) {
+              if (customfields[y].id == 360000751620) {
+                cf = customfields[y].value;
+              }
+            }
+
+            $('tbody').append('<tr class="row-' + i + '"></tr>');
+            $('.row-' + i)
+              .append('<td>' + tickets[i].id + '</td>')
+              .append('<td>' + tickets[i].subject + '</td>')
+              .append('<td>' + tickets[i].description + '</td>')
+              .append('<td>' + cf + '</td>');
+
+            $.ajax({
+              url: 'https://d3v-ontec.zendesk.com/api/v2/users/' + tickets[i].requester_id + '.json',
+              type: 'GET',
+              headers: {
+                "Authorization": "Bearer 10758ffcfa48cfc5abae073ee78fd838684e8d82067d122516bcce6835940000"
+              },
+              async: false,
+              complete: function(data) {
+                $('.row-' + i).append('<td>' + data.responseJSON.user.name + '</td>');
+              }
+            });
+          }
+        }
+      })
+    </script>
+  </body>
+</html>
