@@ -2,68 +2,156 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <title> Jet Black requests</title>
+    <style>
+
+      @font-face {
+        font-family: Mark;
+        src: url(mark_medium.otf);
+      }
+
+      table {
+        font-size: 14px;
+        font-family: Mark;
+      }
+
+      td.text-truncate {
+        max-width: 500px;
+      }
+
+      a:hover {
+        text-decoration: underline!important;
+        cursor: pointer!important;
+      }
+
+    </style>
   </head>
   <body>
-    <table>
-      <thead>
-        <th>Ticket ID</th>
-        <th>Subject</th>
-        <th>Description</th>
-        <th>Custom Field</th>
-        <th>Requester</th>
-      </thead>
-      <tbody>
+    <div class="table-responsive p-5">
+      <table class="table table-hover">
+          <thead class="thead-dark">
+              <tr>
+                  <th scope="col">Ticket ID</th>
+                  <th scope="col">Subject</th>
+                  <th scope="col">Description</th>
+                  <th scope="col">Severity</th>
+                  <th scope="col">Product Area</th>
+                  <th scope="col">Requester</th>
+              </tr>
+          </thead>
+          <tbody>
 
-      </tbody>
-    </table>
+          </tbody>
+        </table>
+      </div>
+      <!-- Modal -->
+      <div class="modal fade" id="requestDescription" tabindex="-1" role="dialog" aria-labelledby="requestDescription" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title"></h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary">Follow</button>
+            </div>
+          </div>
+        </div>
+      </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js">
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script type="text/javascript">
 
-      $.ajax({
-        url: 'https://d3v-ontec.zendesk.com/api/v2/tickets.json',
-        type: 'GET',
-        headers: {
-          "Authorization": "Bearer 10758ffcfa48cfc5abae073ee78fd838684e8d82067d122516bcce6835940000"
-        },
-        async: true,
-        complete: function (data) {
+      function getTickets(url, a) {
+        let nextPage;
 
-          let tickets = data.responseJSON.tickets;
+          $.ajax({
+            url: url,
+            type: 'GET',
+            headers: {
+              "Authorization": "Bearer f963a2e4f1219691a33d90b4eb45fb5e9892a1d676cd5a70cc1eff141c096564"
+            },
+            async: false,
+            complete: function (data) {
 
-          for (var i = 0; i < tickets.length && tickets[i].status != 'solved' && tickets[i].status != 'closed'; i++) {
+              let response = data.responseJSON;
+              let tickets = response.tickets;
 
-            let customfields = tickets[i].custom_fields;
-            let cf;
+              for (let i = 0; i < tickets.length; i++) {
 
-            for (var y = 0; y < customfields.length; y++) {
-              if (customfields[y].id == 360000751620) {
-                cf = customfields[y].value;
-              }
+                if (tickets[i].status == 'open') {
+                  let customfields = tickets[i].custom_fields;
+                  let severity = '';
+                  let productArea = '';
+                  let test;
+
+                  for (let y = 0; y < customfields.length; y++) {
+
+                    let fieldValue = customfields[y].value;
+                    let fieldId = customfields[y].id;
+
+                    if (fieldValue != null) {
+                      if (fieldId == 360024218954) { severity = fieldValue }
+                      else if (fieldId == 360025918074) { productArea = fieldValue }
+                    }
+                  }
+
+                  $('tbody').append('<tr class="row-' + a + '-' + i + '"></tr>');
+                  let currentRow = $('.row-' + a + '-' + i);
+                  currentRow.append(
+                    '<td>' + tickets[i].id + '</td>',
+                     '<td class="subject">' + tickets[i].subject + '</td>',
+                      '<td class="text-truncate d-inline-block"><a data-toggle="modal" data-target="#requestDescription">' + tickets[i].description + '</a></td>',
+                       '<td>' + severity + '</td>',
+                        '<td>' + productArea + '</td>');
+
+                  $.ajax({
+                    url: 'https://jetblack.zendesk.com/api/v2/users/' + tickets[i].requester_id + '.json',
+                    type: 'GET',
+                    headers: {
+                      "Authorization": "Bearer f963a2e4f1219691a33d90b4eb45fb5e9892a1d676cd5a70cc1eff141c096564"
+                    },
+                    async: false,
+                    complete: function(data) {
+                      currentRow.append('<td>' + data.responseJSON.user.name + '</td>');
+                    }
+                  })
+                }
             }
-
-            $('tbody').append('<tr class="row-' + i + '"></tr>');
-            $('.row-' + i)
-              .append('<td>' + tickets[i].id + '</td>')
-              .append('<td>' + tickets[i].subject + '</td>')
-              .append('<td>' + tickets[i].description + '</td>')
-              .append('<td>' + cf + '</td>');
-
-            $.ajax({
-              url: 'https://d3v-ontec.zendesk.com/api/v2/users/' + tickets[i].requester_id + '.json',
-              type: 'GET',
-              headers: {
-                "Authorization": "Bearer 10758ffcfa48cfc5abae073ee78fd838684e8d82067d122516bcce6835940000"
-              },
-              async: false,
-              complete: function(data) {
-                $('.row-' + i).append('<td>' + data.responseJSON.user.name + '</td>');
-              }
-            });
+            nextPage = response.next_page;
           }
-        }
-      })
+        })
+        return nextPage;
+      };
+
+      let currentPage = 'https://jetblack.zendesk.com/api/v2/tickets.json';
+      let pageCount = 1;
+
+      while (currentPage != null) {
+        currentPage = getTickets(currentPage, pageCount);
+        pageCount++;
+      }
+
+      $(document).ready(function() {
+        $('#requestDescription').on('show.bs.modal', function (event) {
+          var button = $(event.relatedTarget) // Button that triggered the modal
+          var title = button.closest('td').siblings('.subject').text();
+          var description = button.text();
+          var modal = $(this);
+          modal.find('.modal-title').text(title);
+          modal.find('.modal-body').text(description);
+        })
+      });
+
     </script>
   </body>
 </html>
