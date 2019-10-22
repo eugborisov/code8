@@ -20,6 +20,10 @@
         max-width: 500px;
       }
 
+      a {
+        color: blue!important;
+      }
+
       a:hover {
         text-decoration: underline!important;
         cursor: pointer!important;
@@ -332,14 +336,14 @@
       });
 
       $.ajax({
-        url: 'https://jetblack.zendesk.com/api/v2/tickets/822.json',
+        url: 'https://jetblack.zendesk.com/api/v2/search.json?query=type%3Aticket+status%3Aopen&include=users',
         type: 'GET',
         headers: {
           "Authorization": "Bearer f963a2e4f1219691a33d90b4eb45fb5e9892a1d676cd5a70cc1eff141c096564"
         },
         async: false,
         complete: function(data) {
-          console.log(data);
+          console.log(data.responseJSON);
         }
       })
   </script>
